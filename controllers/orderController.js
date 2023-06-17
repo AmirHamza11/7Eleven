@@ -75,6 +75,7 @@ const createOrder = async (req, res) => {
           buyer_name: data.buyer_name,
           buyer_address: data.buyer_address,
           order_status: 0,
+          buyer_phone: data.buyer_phone,
         });
 
         await updateDoc(docRef, {
@@ -108,9 +109,16 @@ const createSupplierRequest = async (req, res) => {
           supplier_price: data.supplier_price,
           supplier_id: data.supplier_id,
           supplier_name: data.supplier_name,
-          status: 1,
+          supplier_phone: data.supplier_phone,
+          order_status: 1,
         });
-        res.json({ status: "success", data: { order_id: orderId } });
+        res.json({
+          status: "success",
+          data: {
+            order_id: orderId,
+            supplier_transaction_id: response.data.data.transaction_id,
+          },
+        });
       })
       .catch((error) => {
         res.status(400).json({ status: "failed", message: error.message });

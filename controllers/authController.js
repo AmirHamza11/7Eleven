@@ -11,7 +11,7 @@ import {
 } from "firebase/firestore";
 
 const register = async (req, res) => {
-  const { email, password, name, address } = req.body;
+  const { email, password, name, address, phone, user_type } = req.body;
   // check if user exists
   const q = query(
     collection(db, "ecomm_users"),
@@ -33,6 +33,8 @@ const register = async (req, res) => {
     password: password,
     name: name,
     address: address,
+    phone: phone,
+    user_type: user_type,
   });
 
   await updateDoc(docRef, {
@@ -41,7 +43,7 @@ const register = async (req, res) => {
   // return user data
   res.status(200).json({
     status: "success",
-    data: { user_id: docRef.id, name, email, address },
+    data: { user_id: docRef.id, name, email, address, user_type, phone },
   });
 };
 
@@ -58,6 +60,7 @@ const login = async (req, res) => {
 
   if (querySnapshot.empty) {
     res.status(402).json({ message: "User does not exist" });
+    return;
   }
 
   querySnapshot.forEach((doc) => {
@@ -69,12 +72,16 @@ const login = async (req, res) => {
         name: data.name,
         email: data.email,
         address: data.address,
+        phone: data.phone,
+        user_type: data.user_type,
+        account_id: data.account_id ?? "",
+        pin_code: data.pin_code ?? "",
       },
     });
   });
 
   // return user data
-  res.json({ message: "login" });
+  // res.json({ message: "login" });
 };
 
 const updateUser = async (req, res) => {
@@ -102,4 +109,19 @@ const updateUser = async (req, res) => {
   } catch (e) {}
 };
 
-export { register, login, updateUser };
+const getAllSuppliers = async (req, res) => {
+  try {
+    const suppliers = [];
+    let q;
+    let querySnapshot;
+    q = query(collection(db, "ecomm_users"), where("user_type", "==", 2));
+    querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+      suppliers.push(doc.data());
+    });
+
+    res.json({ staus: "success", data: { suppliers } });
+  } catch (e) {}
+};
+
+export { register, login, updateUser, getAllSuppliers };
