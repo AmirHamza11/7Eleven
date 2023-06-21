@@ -2,6 +2,8 @@ import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const SupplierRequestModal = ({
   closeModal,
@@ -23,26 +25,41 @@ const SupplierRequestModal = ({
   });
   const [count, setCount] = useState(0);
 
-  const submitHandler = () => {
-    axios
-      .post(
-        `http://localhost:3000/api/v1/order/${order_id}/supplier-req`,
-        formData
-      )
-      .then((response) => {
-        console.log(response.data.data);
-        updateOrder(order_id, {
-          ...order,
-          order_status: 1,
-          supplier_transaction_id: response.data.data.supplier_transaction_id,
-          supplier_name: formData.supplier_name,
-          supplier_phone: formData.supplier_phone,
-        });
-        closeModal(null);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+  const submitHandler = async () => {
+    await toast.promise(
+      axios
+        .post(
+          `http://localhost:3000/api/v1/order/${order_id}/supplier-req`,
+          formData
+        )
+        .then((response) => {
+          console.log(response.data.data);
+          updateOrder(order_id, {
+            ...order,
+            order_status: 1,
+            supplier_transaction_id: response.data.data.supplier_transaction_id,
+            supplier_name: formData.supplier_name,
+            supplier_phone: formData.supplier_phone,
+          });
+          closeModal(null);
+        })
+        .catch((error) => {
+          console.log(error);
+          toast.error(error.response.data.message, {
+            position: toast.POSITION.TOP_CENTER,
+            autoClose: 4000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            progress: undefined,
+            theme: "colored",
+          });
+        }),
+      {
+        pending: "Creating Request...",
+        success: "Request Created!",
+      }
+    );
   };
   const incrementCount = () => {
     // Update state with incremented value

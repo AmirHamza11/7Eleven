@@ -95,6 +95,7 @@
   --padding-bottom: 1rem;
   --background-color: pink;
   padding-top: 0.4rem;
+  padding-right: 0 !important;
 }
 .order-quan {
   font-size: 1.4rem;

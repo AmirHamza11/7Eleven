@@ -134,8 +134,8 @@ const AdminOrders = () => {
     });
   };
 
-  const [open, setOpen] = useState(false);
-  const [openSupplier, setOpenSupplier] = useState(false);
+  const [open, setOpen] = useState(null);
+  const [openSupplier, setOpenSupplier] = useState(null);
   return (
     <div>
       <div className="order-body">
@@ -169,20 +169,43 @@ const AdminOrders = () => {
 
                       <div>
                         <div className="supplier-double-button">
-                          {user_type === "0" && Element.order_status < 1 && (
+                          {((user_type === "0" && Element.order_status < 1) ||
+                            (user_type === "2" &&
+                              Element.order_status < 2)) && (
                             <button
                               className="mark-complete"
                               onClick={() => {
-                                setOpenSupplier(true);
+                                if (user_type === "0") {
+                                  setOpenSupplier(Element);
+                                } else {
+                                  axios
+                                    .patch(
+                                      `http://localhost:3000/api/v1/order/${Element.order_id}`,
+                                      {
+                                        order_status: 2,
+                                      }
+                                    )
+                                    .then((response) => {
+                                      updateOrder(Element.order_id, {
+                                        ...Element,
+                                        order_status: 2,
+                                      });
+                                    })
+                                    .catch((error) => {
+                                      console.log(error);
+                                    });
+                                }
                               }}
                             >
-                              Supplier Request
+                              {user_type === "0"
+                                ? "Supplier Request"
+                                : "Mark Complete"}
                             </button>
                           )}
                           <button
                             className="supplier-order-status"
                             onClick={() => {
-                              setOpen(true);
+                              setOpen(Element);
                             }}
                           >
                             Status
@@ -194,21 +217,19 @@ const AdminOrders = () => {
                         </p>
                       </div>
                     </div>
-                    {open && (
-                      <UniversalModal data={Element} closeModal={setOpen} />
-                    )}
-                    {openSupplier && (
-                      <SupplierRequestModal
-                        order_id={Element.order_id}
-                        suppliers={suppliers}
-                        total_price={Element.total_price}
-                        updateOrder={updateOrder}
-                        order={Element}
-                        closeModal={setOpenSupplier}
-                      />
-                    )}
                   </div>
                 )
+            )}
+            {open && <UniversalModal data={open} closeModal={setOpen} />}
+            {openSupplier && (
+              <SupplierRequestModal
+                order_id={openSupplier.order_id}
+                suppliers={suppliers}
+                total_price={openSupplier.total_price}
+                updateOrder={updateOrder}
+                order={openSupplier}
+                closeModal={setOpenSupplier}
+              />
             )}
             {(open || openSupplier) && <div className="overlay"></div>}
           </div>
@@ -221,16 +242,20 @@ const AdminOrders = () => {
                   Element.order_status === 2 && (
                     <div key={Element.order_id} className="grid-col">
                       <p className="complete-orderId">
-                        Order {Element.orderId}
+                        Order {Element.order_id}
                       </p>
                       <p className="delivery-date">
-                        Delivered on: {Element.delivered}
+                        Delivered on: {Element.formattedDate.slice(0, 8)}
                       </p>
-                      <p className="supplier">Supplier: {Element.supplier}</p>
+                      <p className="supplier">
+                        Supplier: {Element.supplier_name}
+                      </p>
                       <p className="complete-product">
-                        {Element.orderedProduct} {Element.quantity}
+                        {Element.product_name} x{Element.quantity}
                       </p>
-                      <p className="complete-price">Total: {Element.price}</p>
+                      <p className="complete-price">
+                        Total: {Element.total_price} tk
+                      </p>
                     </div>
                   )
               )}

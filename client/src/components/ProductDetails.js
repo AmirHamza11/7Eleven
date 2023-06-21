@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../css/Modal.css";
+import "react-toastify/dist/ReactToastify.css";
+import { useHistory } from "react-router-dom";
+
+import { toast } from "react-toastify";
 import {
   faStar,
   faStarHalfStroke,
@@ -11,6 +15,7 @@ import {
 import axios from "axios";
 
 const Modal = ({ closeModal, element }) => {
+  const history = useHistory();
   // console.log(element);
   const [count, setCount] = useState(1);
   const [formData, setFormData] = useState({
@@ -20,24 +25,41 @@ const Modal = ({ closeModal, element }) => {
     buyer_id: localStorage.getItem("ecomm_account_id"),
     buyer_account_id: localStorage.getItem("bank_account_id"),
     buyer_pin: localStorage.getItem("bank_pin_code"),
-    ecomm_account_id: "qwerty1234",
+    ecomm_account_id: "7eleven1234",
     product_name: element.productName,
     quantity: 1,
     total_price: parseFloat(element.price),
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     // e.preventDefault();
+
     console.log(formData);
-    axios
-      .post("http://localhost:3000/api/v1/order", formData)
-      .then((response) => {
-        console.log(response.data.data);
-        closeModal(null);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    await toast.promise(
+      axios
+        .post("http://localhost:3000/api/v1/order", formData)
+        .then((response) => {
+          console.log(response.data.data);
+          closeModal(null);
+          history.push("/orders");
+        })
+        .catch((error) => {
+          console.log(error);
+          toast.error(error.response.data.message, {
+            position: toast.POSITION.TOP_CENTER,
+            autoClose: 4000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            progress: undefined,
+            theme: "colored",
+          });
+        }),
+      {
+        pending: "Ordering...",
+        success: "Order Placed!",
+      }
+    );
   };
 
   const incrementCount = () => {
